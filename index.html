@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draggable Camera On/Off</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+
+        .draggable {  /* New container that wraps video and button */
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            text-align: center;
+        }
+
+        video {
+            width: 320px;
+            height: 240px;
+            background-color: #000;
+            border-radius: 10px;
+        }
+
+        button {
+            background-color: #2f54eb;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px; /* Space between video and button */
+        }
+
+        button:hover {
+            background-color: #1d39c4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="draggable" id="draggableContainer">
+        <video id="videoElement" autoplay></video>
+        <button id="toggleCameraBtn">Turn Camera On</button>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('videoElement');
+        const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+        const draggableContainer = document.getElementById('draggableContainer');
+        let stream;
+
+        // Function to start the camera
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = stream;
+                toggleCameraBtn.textContent = 'Turn Camera Off';
+            } catch (error) {
+                console.error('Error accessing the camera:', error);
+            }
+        }
+
+        // Function to stop the camera
+        function stopCamera() {
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+                videoElement.srcObject = null;
+                toggleCameraBtn.textContent = 'Turn Camera On';
+            }
+        }
+
+        // Event listener to toggle the camera on and off
+        toggleCameraBtn.addEventListener('click', () => {
+            if (videoElement.srcObject) {
+                stopCamera();  // If the camera is on, turn it off
+            } else {
+                startCamera(); // If the camera is off, turn it on
+            }
+        });
+
+        // Dragging functionality for the draggable container (moves video and button together)
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        draggableContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            draggableContainer.style.cursor = 'grabbing';
+            // Initial mouse position when clicking
+            startX = e.clientX;
+            startY = e.clientY;
+            // Initial position of the draggable container
+            initialX = draggableContainer.offsetLeft;
+            initialY = draggableContainer.offsetTop;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                // Calculate the new position of the container
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                draggableContainer.style.left = `${initialX + deltaX}px`;
+                draggableContainer.style.top = `${initialY + deltaY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggableContainer.style.cursor = 'grab';
+        });
+    </script>
+
+</body>
+</html>
